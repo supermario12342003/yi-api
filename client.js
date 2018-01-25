@@ -1,60 +1,86 @@
 import net from "net";
 import Constant from "./constant";
 
-var socketClient = new net.Socket(),
-listeners    = [],
-connected    = false,
-connecting   = false;
+class Client {
+    constructor(){
+        this._socketClient = new net.Socket();
+        this._listeners = [];
+        this._connected = false;
+        this._connecting = false;
+        this.token= null;
+        // On client receive data
+        this._socketClient.on('data', (data) => {
+            data = JSON.parse(data);
 
-// Client
-var Client = {
-    token: null,
-    isConnected: function () {
-        return connected;
-    },
-    connect: function (ip, port) {
-        return new Promise(function (resolve, reject) {
-            if (connected) {
+            this._listeners.filter(function (listener) {
+                return !listener(data);
+            });
+        });
+
+        // On client close
+        this._socketClient.on('close', (had_error) => {
+            if (this._connected) {
+                this._connected = false;
+                this.token = null;
+
+                this._socketClient.destroy();
+
+                if (had_error) {
+                    console.error('Transmission error');
+                }
+            }
+        });
+    }
+
+    isConnected () {
+        return this._connected;
+    }
+
+    connect(ip, port) {
+        return new Promise((resolve, reject) => {
+            if (this._connected) {
                 reject('Already connected');
                 return;
             }
 
-            if (connecting) {
+            if (this._connecting) {
                 reject('Already trying connecting');
                 return;
             }
 
-            connecting = true;
+            this._connecting = true;
 
-            var onError = function (err) {
-                connecting = false;
+            var onError = (err) => {
+                this._connecting = false;
                 reject(err);
             };
 
-            socketClient.once('error', onError);
+            this._socketClient.once('error', onError);
 
-            socketClient.connect(port, ip, function () {
-                connected = true;
-                connecting = false;
-                socketClient.removeListener('error', onError);
+            this._socketClient.connect(port, ip, () => {
+                this._connected = true;
+                this._connecting = false;
+                this._socketClient.removeListener('error', onError);
                 resolve();
             });
         });
-    },
-    disconnect: function () {
-        return new Promise(function (resolve) {
-            socketClient.on('end', function () {
+    }
+
+    disconnect() {
+        return new Promise((resolve) => {
+            this._socketClient.on('end', function () {
                 resolve();
             });
 
-            connected = false;
-            Client.token = null;
+            this._connected = false;
+            this.token = null;
 
-            socketClient.end();
+            this._socketClient.end();
         });
-    },
-    sendAction: function (action, testFunc, param, type) {
-        return new Promise(function (resolve) {
+    }
+
+    sendAction(action, testFunc, param, type) {
+        return new Promise((resolve) => {
             var message = {
                 msg_id: action,
                 token:  action == Constant.action.REQUEST_TOKEN ? 0 : Client.token
@@ -68,47 +94,28 @@ var Client = {
                 message.type = type;
             }
 
-            sendMessage(message, testFunc, resolve);
+            this._sendMessage(message, testFunc, resolve);
         });
-    },
-}
-
-// On client receive data
-socketClient.on('data', function (data) {
-    data = JSON.parse(data);
-
-    listeners.filter(function (listener) {
-        return !listener(data);
-    });
-});
-
-// On client close
-socketClient.on('close', function (had_error) {
-    if (connected) {
-        connected = false;
-        Client.token = null;
-
-        socketClient.destroy();
-
-        if (had_error) {
-            console.error('Transmission error');
+    }
+    _sendMessage(message, testFunc, resolve) {
+        if (testFunc) {
+            this._listeners.push((data) => {
+                var result = !!testFunc(data);
+                if (result) {
+                    resolve(data.hasOwnProperty('param') ? data.param : null);
+                }
+                return result;
+            });
         }
+        this._socketClient.write(JSON.stringify(message));
     }
-});
-
-// Send message on the socket and register a test function to get result
-// Test function should return true on a valid response
-function sendMessage(message, testFunc, resolve) {
-    if (testFunc) {
-        listeners.push(function (data) {
-            var result = !!testFunc(data);
-            if (result) {
-                resolve(data.hasOwnProperty('param') ? data.param : null);
-            }
-            return result;
-        });
-    }
-    socketClient.write(JSON.stringify(message));
 }
-
+/*
+    return {
+        isConnected: this.isConnected,
+        connect: this.connect,
+        disconnect: this.disconnect,
+        sendAction: this.sendAction,
+    };
+*/
 export default Client;
