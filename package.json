@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": {
     "name": "Mengwei Choong",
-    "email": "choongmengwei@gmail.com",
+    "email": "choongmengwei@gmail.com"
   },
   "files": [
     "yi-api.js",
@@ -19,7 +19,7 @@
     "constant.js"
   ],
   "dependencies": {
-    "html-table-to-json": "^0.2.1",
+    "html-table-to-json": "^0.2.1"
   },
   "main": "yi-api.js",
   "engines": {
