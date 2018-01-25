@@ -41,6 +41,7 @@ YiActionCamera.disconnect = function () {
 // Take photo
 YiActionCamera.takePhoto = function () {
     return sendAction(constant.action.TAKE_PHOTO, function (data) {
+        console.log(data);
         return (data.hasOwnProperty('type') && data.type == 'photo_taken');
     });
 };
