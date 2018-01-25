@@ -1,0 +1,31 @@
+{
+  "name": "yi-api",
+  "version": "1.0.0",
+  "description": "Connect to Yi action camera",
+  "keywords": [
+    "yi",
+    "action",
+    "camera",
+    "xiaomi"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "Mengwei Choong",
+    "email": "choongmengwei@gmail.com",
+  },
+  "files": [
+    "yi-api.js",
+    "client.js",
+    "constant.js"
+  ],
+  "dependencies": {
+    "html-table-to-json": "^0.2.1",
+  },
+  "main": "yi-api.js",
+  "engines": {
+    "node": ">0.12"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
