@@ -102,15 +102,12 @@ function sendMessage(message, testFunc, resolve) {
     if (testFunc) {
         listeners.push(function (data) {
             var result = !!testFunc(data);
-
             if (result) {
                 resolve(data.hasOwnProperty('param') ? data.param : null);
             }
-
             return result;
         });
     }
-
     socketClient.write(JSON.stringify(message));
 }
 

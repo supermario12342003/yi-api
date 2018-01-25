@@ -99,6 +99,7 @@ var YiActionCamera = {
             }
             fileHttpPath = filePath.replace(/\/tmp\/fuse_d/, 'http://' + YiActionCamera.ip);
         }
+        console.log("fileHttpPath", fileHttpPath);
         return new Promise(function (resolve, reject) {
             http.get(fileHttpPath, function (response) {
                 var html = "";
@@ -106,8 +107,16 @@ var YiActionCamera = {
                     html += chunk;
                 });
                 response.on('end', function () {
+                    var ret = [];
                     var json = (new HtmlTableToJson(html)).results;
-                    resolve(json[0].slice(1, -1));
+                    json = json[0].slice(1, json[0].length);
+                    for (var i = 0; i < json.length; i++) {
+                        ret.push({
+                            name: json[i]['2'],
+                            size: json[i]['3'] == '-' ? '0' : json[i]['3'],
+                        });
+                    }
+                    resolve(ret);
                 });
             })
             .on('error', function (err) {
