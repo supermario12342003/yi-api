@@ -27,6 +27,7 @@ var YiActionCamera = {
     },
     takePhoto: function () {
         return sendAction(Constant.action.TAKE_PHOTO, function (data) {
+            console.log("takePhoto data", data);
             return (data.hasOwnProperty('type') && data.type == 'photo_taken');
         });
     },
