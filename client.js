@@ -1,83 +1,77 @@
-'use strict';
-
-const net      = require('net'),
-      constant = require('./constant');
+import net from "net";
+import Constant from "./constant";
 
 var socketClient = new net.Socket(),
-    listeners    = [],
-    connected    = false,
-    connecting   = false;
+listeners    = [],
+connected    = false,
+connecting   = false;
 
 // Client
-var Client = exports;
+var Client = {
+    token: null,
+    isConnected: function () {
+        return connected;
+    },
+    connect: function (ip, port) {
+        return new Promise(function (resolve, reject) {
+            if (connected) {
+                reject('Already connected');
+                return;
+            }
 
-Client.token = null;
+            if (connecting) {
+                reject('Already trying connecting');
+                return;
+            }
 
-Client.isConnected = function () {
-    return connected;
-};
+            connecting = true;
 
-Client.connect = function (ip, port) {
-    return new Promise(function (resolve, reject) {
-        if (connected) {
-            reject('Already connected');
-            return;
-        }
+            var onError = function (err) {
+                connecting = false;
+                reject(err);
+            };
 
-        if (connecting) {
-            reject('Already trying connecting');
-            return;
-        }
+            socketClient.once('error', onError);
 
-        connecting = true;
-
-        var onError = function (err) {
-            connecting = false;
-            reject(err);
-        };
-
-        socketClient.once('error', onError);
-
-        socketClient.connect(port, ip, function () {
-            connected = true;
-            connecting = false;
-            socketClient.removeListener('error', onError);
-            resolve();
+            socketClient.connect(port, ip, function () {
+                connected = true;
+                connecting = false;
+                socketClient.removeListener('error', onError);
+                resolve();
+            });
         });
-    });
-};
+    },
+    disconnect: function () {
+        return new Promise(function (resolve) {
+            socketClient.on('end', function () {
+                resolve();
+            });
 
-Client.disconnect = function () {
-    return new Promise(function (resolve) {
-        socketClient.on('end', function () {
-            resolve();
+            connected = false;
+            Client.token = null;
+
+            socketClient.end();
         });
+    },
+    sendAction: function (action, testFunc, param, type) {
+        return new Promise(function (resolve) {
+            var message = {
+                msg_id: action,
+                token:  action == Constant.action.REQUEST_TOKEN ? 0 : Client.token
+            };
 
-        connected = false;
-        Client.token = null;
+            if (param) {
+                message.param = param;
+            }
 
-        socketClient.end();
-    });
-};
+            if (type) {
+                message.type = type;
+            }
 
-Client.sendAction = function (action, testFunc, param, type) {
-    return new Promise(function (resolve) {
-        var message = {
-            msg_id: action,
-            token:  action == constant.action.REQUEST_TOKEN ? 0 : Client.token
-        };
-
-        if (param) {
-            message.param = param;
-        }
-
-        if (type) {
-            message.type = type;
-        }
-
-        sendMessage(message, testFunc, resolve);
-    });
-};
+            sendMessage(message, testFunc, resolve);
+        });
+    },
+}
 
 // On client receive data
 socketClient.on('data', function (data) {
@@ -119,3 +113,5 @@ function sendMessage(message, testFunc, resolve) {
 
     socketClient.write(JSON.stringify(message));
 }
+
+export default Client;

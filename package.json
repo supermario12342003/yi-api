@@ -11,7 +11,7 @@
   "license": "MIT",
   "author": {
     "name": "Mengwei Choong",
-    "email": "choongmengwei@gmail.com",
+    "email": "choongmengwei@gmail.com"
   },
   "files": [
     "yi-api.js",
@@ -19,7 +19,9 @@
     "constant.js"
   ],
   "dependencies": {
-    "html-table-to-json": "^0.2.1",
+    "babel-cli": "^6.26.0",
+    "babel-preset-node6": "^11.0.0",
+    "html-table-to-json": "^0.2.1"
   },
   "main": "yi-api.js",
   "engines": {
@@ -27,5 +29,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "babel-preset-es2015": "^6.24.1"
   }
 }
